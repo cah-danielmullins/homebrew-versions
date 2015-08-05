@@ -1,20 +1,14 @@
 class Postgresql93 < Formula
+  desc "Object-relational database system"
   homepage "http://www.postgresql.org/"
-  url "http://ftp.postgresql.org/pub/source/v9.3.5/postgresql-9.3.5.tar.bz2"
-  sha256 "14176ffb1f90a189e7626214365be08ea2bfc26f26994bafb4235be314b9b4b0"
+  url "http://ftp.postgresql.org/pub/source/v9.3.9/postgresql-9.3.9.tar.bz2"
+  sha256 "f73bd0ec2028511732430beb22414a022d2114231366e8cbe78c149793910549"
 
   bottle do
-    root_url "https://downloads.sf.net/project/machomebrew/Bottles/versions"
-    sha1 "03ee0754bd8d4533f46b5a9c9fc4f92d10ab4330" => :yosemite
-    sha1 "8505dfee60752f920e9c75fce19729c4ba76b857" => :mavericks
-    sha1 "aa9e5d577b52b253ac211b1b8b79f26d197d2112" => :mountain_lion
+    sha256 "70ea1f08bfc9b37df07074e103726a0f4ca13a28898bc849f09556b8ceca732c" => :yosemite
+    sha256 "f4bd484e2bf510a2b1e1b413a79496ffd3250e501f61af87738aed827181a6ea" => :mavericks
+    sha256 "a029295e7590100d8d2d902266cbffa36a2baff5014ff1515f96470c6f4cf99d" => :mountain_lion
   end
-
-  depends_on "openssl"
-  depends_on "readline"
-  depends_on "libxml2" if MacOS.version <= :leopard # Leopard libxml is too old
-  depends_on "ossp-uuid" => :recommended # ossp-uuid is no longer required for uuid support since 9.4beta2
-  depends_on :python => :optional
 
   option "32-bit"
   option "without-perl", "Build without Perl support"
@@ -24,6 +18,12 @@ class Postgresql93 < Formula
   deprecated_option "no-perl" => "without-perl"
   deprecated_option "no-tcl" => "without-tcl"
   deprecated_option "enable-dtrace" => "with-dtrace"
+
+  depends_on "openssl"
+  depends_on "readline"
+  depends_on "libxml2" if MacOS.version <= :leopard # Leopard libxml is too old
+  depends_on "ossp-uuid" => :recommended # ossp-uuid is no longer required for uuid support since 9.4beta2
+  depends_on :python => :optional
 
   conflicts_with "postgres-xc",
     :because => "postgresql and postgres-xc install the same binaries."
@@ -58,7 +58,7 @@ class Postgresql93 < Formula
     args << "--with-perl" if build.with? "perl"
 
     # The CLT is required to build tcl support on 10.7 and 10.8 because tclConfig.sh is not part of the SDK
-    unless MacOS.version < :mavericks && MacOS::CLT.installed? || build.without?("tcl")
+    if build.with?("tcl") && (MacOS.version >= :mavericks || MacOS::CLT.installed?)
       args << "--with-tcl"
 
       if File.exist?("#{MacOS.sdk_path}/usr/lib/tclConfig.sh")
@@ -141,7 +141,7 @@ class Postgresql93 < Formula
   end
 
   test do
-    system "#{bin}/initdb", testpath
+    system "#{bin}/initdb", testpath/"test"
   end
 end
 

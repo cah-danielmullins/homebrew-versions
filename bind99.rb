@@ -1,12 +1,20 @@
-require "formula"
-
 class Bind99 < Formula
-  homepage "http://www.isc.org/software/bind/"
-  url "http://ftp.isc.org/isc/bind9/9.9.6-P1/bind-9.9.6-P1.tar.gz"
-  sha1 "c2c276dd1f205924662bd94242a8776ea29c4e3b"
-  version "9.9.6-P1"
+  desc "Implementation of the DNS protocols"
+  homepage "https://www.isc.org/downloads/bind/"
+  url "https://ftp.isc.org/isc/bind9/9.9.7-P2/bind-9.9.7-P2.tar.gz"
+  mirror "https://fossies.org/linux/misc/dns/bind9/9.9.7-P2/bind-9.9.7-P2.tar.gz"
+  version "9.9.7-P2"
+  sha256 "f5f433567e5f68d61460d86f691471259a49b6d10d7422acbd88b7fdb038b518"
+
+  bottle do
+    sha256 "3dfc859b1d7feb9f34cf54a733a923e09940d80158574e38cea8fa155f43c83d" => :yosemite
+    sha256 "0324fd5d0a415b96de3ee9e16d8ec99e2d4dd5367031a1c4152bbaab413cdea9" => :mavericks
+    sha256 "02da332c661a612961ca5dceb9334db247caa5fb4d78864397ddb3f982d218f3" => :mountain_lion
+  end
 
   depends_on "openssl"
+
+  conflicts_with "bind", :because => "Differing versions of the same formula"
 
   def install
     ENV.libxml2
@@ -23,20 +31,20 @@ class Bind99 < Formula
     system "make"
     system "make", "install"
 
-    (buildpath+"named.conf").write named_conf
+    (buildpath/"named.conf").write named_conf
     system "#{sbin}/rndc-confgen", "-a", "-c", "#{buildpath}/rndc.key"
     etc.install "named.conf", "rndc.key"
   end
 
   def post_install
-    (var+"log/named").mkpath
+    (var/"log/named").mkpath
 
     # Create initial configuration/zone/ca files.
     # (Mirrors Apple system install from 10.8)
-    unless (var+"named").exist?
-      (var+"named").mkpath
-      (var+"named/localhost.zone").write localhost_zone
-      (var+"named/named.local").write named_local
+    unless (var/"named").exist?
+      (var/"named").mkpath
+      (var/"named/localhost.zone").write localhost_zone
+      (var/"named/named.local").write named_local
     end
   end
 
@@ -154,5 +162,10 @@ class Bind99 < Formula
     </dict>
     </plist>
     EOS
+  end
+
+  test do
+    system bin/"dig", "-v"
+    system bin/"dig", "brew.sh"
   end
 end
