@@ -1,14 +1,14 @@
 class Gnupg21 < Formula
   desc "GNU Privacy Guard: a free PGP replacement"
   homepage "https://www.gnupg.org/"
-  url "ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.1.6.tar.bz2"
-  mirror "https://www.mirrorservice.org/sites/ftp.gnupg.org/gcrypt/gnupg/gnupg-2.1.6.tar.bz2"
-  sha256 "5e599ad542199f3bd733eed2b88a539d1b4c3beda2dbab0ff69f1896f52e92fd"
+  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.1.11.tar.bz2"
+  mirror "https://www.mirrorservice.org/sites/ftp.gnupg.org/gcrypt/gnupg/gnupg-2.1.11.tar.bz2"
+  sha256 "b7b0fb2c8c5d47d7ec916d4a1097c0ddcb94a12bb1c0ac424ad86b1ee316b61a"
 
   bottle do
-    sha256 "19c095a0cad8c62047701fea74815335465062e30dfbc258f1f3d867745d4b96" => :yosemite
-    sha256 "9d2ca5b007020d43b26eafacb07ac8fe530d72176fc4f199faa73b92c6fa1982" => :mavericks
-    sha256 "5b5d9ef88255adb89f68220a70d8627de66dcc82a1c7e8847e9d5efe8ff60c02" => :mountain_lion
+    sha256 "725cb9cebd07ca0ab9ea56a5742c765b77f0eed17f7c4428b575c40eea35ac8b" => :el_capitan
+    sha256 "a699c10bc5324df5b88cd1612b7aa9c4b841986d7438eed542a4b59816cf41e2" => :yosemite
+    sha256 "8c43114c858a4975c0fd1b3b52703e2be6b4ac2d8a40fb89dd9366db425b39a0" => :mavericks
   end
 
   head do
@@ -22,17 +22,19 @@ class Gnupg21 < Formula
   option "with-gpgsplit", "Additionally install the gpgsplit utility"
 
   depends_on "pkg-config" => :build
+  depends_on "sqlite" => :build if MacOS.version == :mavericks
   depends_on "npth"
   depends_on "gnutls"
-  depends_on "homebrew/fuse/encfs" => :optional
   depends_on "libgpg-error"
   depends_on "libgcrypt"
   depends_on "libksba"
   depends_on "libassuan"
   depends_on "pinentry"
+  depends_on "gettext"
+  depends_on "adns"
   depends_on "libusb-compat" => :recommended
   depends_on "readline" => :optional
-  depends_on "gettext"
+  depends_on "homebrew/fuse/encfs" => :optional
 
   conflicts_with "gnupg2",
         :because => "GPG2.1.x is incompatible with the 2.0.x branch."
@@ -49,7 +51,6 @@ class Gnupg21 < Formula
     (var/"run").mkpath
 
     ENV.append "LDFLAGS", "-lresolv"
-
     ENV["gl_cv_absolute_stdint_h"] = "#{MacOS.sdk_path}/usr/include/stdint.h"
 
     args = %W[
@@ -59,6 +60,7 @@ class Gnupg21 < Formula
       --sbindir=#{bin}
       --sysconfdir=#{etc}
       --enable-symcryptrun
+      --with-pinentry-pgm=#{Formula["pinentry"].opt_bin}/pinentry
     ]
 
     args << "--with-readline=#{Formula["readline"].opt_prefix}" if build.with? "readline"
@@ -76,8 +78,6 @@ class Gnupg21 < Formula
       s.gsub! "PACKAGE_TARNAME='gnupg'", "PACKAGE_TARNAME='gnupg2'"
     end
 
-    inreplace "tools/gpgkey2ssh.c", "gpg --list-keys", "gpg2 --list-keys"
-
     system "./configure", *args
 
     system "make"
@@ -86,14 +86,11 @@ class Gnupg21 < Formula
 
     bin.install "tools/gpgsplit" => "gpgsplit2" if build.with? "gpgsplit"
 
-    # Conflicts with a manpage from the 1.x formula, and
-    # gpg-zip isn't installed by this formula anyway
-    rm man1/"gpg-zip.1"
-    # Move more man conflict out of 1.x's way.
+    # Move man files that conflict with 1.x.
     mv share/"doc/gnupg2/FAQ", share/"doc/gnupg2/FAQ21"
     mv share/"doc/gnupg2/examples/gpgconf.conf", share/"doc/gnupg2/examples/gpgconf21.conf"
     mv share/"info/gnupg.info", share/"info/gnupg21.info"
-    mv "#{man7}/gnupg.7", "#{man7}/gnupg21.7"
+    mv man7/"gnupg.7", man7/"gnupg21.7"
   end
 
   def caveats; <<-EOS.undent

@@ -19,6 +19,7 @@ class Gcc49 < Formula
     `uname -r`.chomp
   end
 
+  desc "The GNU Compiler Collection"
   homepage "https://gcc.gnu.org"
   url "http://ftpmirror.gnu.org/gcc/gcc-4.9.3/gcc-4.9.3.tar.bz2"
   mirror "https://ftp.gnu.org/gnu/gcc/gcc-4.9.3/gcc-4.9.3.tar.bz2"
@@ -27,17 +28,24 @@ class Gcc49 < Formula
   head "svn://gcc.gnu.org/svn/gcc/branches/gcc-4_9-branch"
 
   bottle do
-    sha256 "5318b57b2ea9f521a25f268a5068dc398a00d1a6ebcc07e5b5c4fc247520abd2" => :yosemite
-    sha256 "227e194a4d006a8f47d522f7cd7545979abe9380cb49b35bfd405b9ead65ca1d" => :mavericks
-    sha256 "fb567677b5f748b227346f15aa8a7c9084505f181610816f8286891f7fb10cdf" => :mountain_lion
+    revision 2
+    sha256 "d4acfd460a951db15d3fff08d4a4f0346110fb41b68f1da567fcb4a82851af5a" => :el_capitan
+    sha256 "894a639b7540df45c6b802b209c0657efcf0f20e883a752c488d2d7cacd17499" => :yosemite
+    sha256 "edf66b0d492b66a9c177939a36f7cd9f44d9b52506c78b2868d3701cf0d9d18f" => :mavericks
   end
 
-  if MacOS.version >= :el_capitan
+  if MacOS.version >= :yosemite
     # Fixes build with Xcode 7.
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66523
     patch do
       url "https://gcc.gnu.org/bugzilla/attachment.cgi?id=35773"
       sha256 "db4966ade190fff4ed39976be8d13e84839098711713eff1d08920d37a58f5ec"
+    end
+    # Fixes assembler generation with XCode 7
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66509
+    patch do
+      url "https://gist.githubusercontent.com/tdsmith/d248e025029add31e7aa/raw/444e292786df41346a3a1cc6267bba587408a007/gcc.diff"
+      sha256 "636b65a160ccb7417cc4ffc263fc815382f8bb895e32262205cd10d65ea7804a"
     end
   end
 

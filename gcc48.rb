@@ -1,4 +1,5 @@
 class Gcc48 < Formula
+  desc "GNU compiler collection"
   def arch
     if Hardware::CPU.type == :intel
       if MacOS.prefer_64_bit?
@@ -20,20 +21,25 @@ class Gcc48 < Formula
   end
 
   homepage "https://gcc.gnu.org"
-  url "http://ftpmirror.gnu.org/gcc/gcc-4.8.4/gcc-4.8.4.tar.bz2"
-  mirror "https://ftp.gnu.org/gnu/gcc/gcc-4.8.4/gcc-4.8.4.tar.bz2"
-  sha256 "4a80aa23798b8e9b5793494b8c976b39b8d9aa2e53cd5ed5534aff662a7f8695"
+  url "http://ftpmirror.gnu.org/gcc/gcc-4.8.5/gcc-4.8.5.tar.bz2"
+  mirror "https://ftp.gnu.org/gnu/gcc/gcc-4.8.5/gcc-4.8.5.tar.bz2"
+  sha256 "22fb1e7e0f68a63cee631d85b20461d1ea6bda162f03096350e38c8d427ecf23"
 
   head "svn://gcc.gnu.org/svn/gcc/branches/gcc-4_8-branch"
 
   bottle do
-    revision 1
-    sha256 "e202b6b2110c2d472966baaf238c5225cb6f84da6a1f963ada1e0021616ec535" => :yosemite
-    sha256 "6f851ed839bf11aaa0da182e30c5d2490b0500fa1f1246cd9518229dadee19d7" => :mavericks
-    sha256 "637925afb747497b4a7569b0f3a5d8d10eb65ffb4c90206f44938439a9c465e0" => :mountain_lion
+    sha256 "5227dc6e44966ff9dc79be23fcff88cbe7a0248b9dc934ac0f2f35392385d20b" => :el_capitan
+    sha256 "cccfea975c7de301fc266ac654a662a0e3c0dcffdf25433b055afd4012965c5f" => :yosemite
+    sha256 "26ce03c32b8fd9f1be750b8cdc36d6405200e3a26ac646731aba562e93b27def" => :mavericks
   end
 
-  if MacOS.version >= :el_capitan
+  if MacOS.version >= :yosemite
+    # Fixes build on El Capitan
+    # https://trac.macports.org/ticket/48471
+    patch :p0 do
+      url "https://raw.githubusercontent.com/Homebrew/patches/dcfc5a2e6/gcc48/define_non_standard_clang_macros.patch"
+      sha256 "e727383c9186fdc36f804c69ad550f5cfd2b996e37083be94c0c9aa8fde226ee"
+    end
     # Fixes build with Xcode 7.
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66523
     patch do

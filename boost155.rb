@@ -23,6 +23,7 @@ class UniversalPython3 < Requirement
 end
 
 class Boost155 < Formula
+  desc "Collection of portable C++ source libraries"
   homepage "http://www.boost.org"
   revision 1
 
@@ -65,7 +66,6 @@ class Boost155 < Formula
     sha256 "7a33b63b1e8c4afdb877cbb45b951c1867fb09ecd73f836478140cdce1ca8291" => :mavericks
     sha256 "e9c02b26e9190d8da61e1acc46d2fb478ea8b836c4a463d5aed57d3c892c7432" => :mountain_lion
   end
-
 
   keg_only "Conflicts with boost in main repository."
 
@@ -111,7 +111,7 @@ class Boost155 < Formula
   def install
     # https://svn.boost.org/trac/boost/ticket/8841
     if build.with?("mpi") && build.with?("single")
-      fail <<-EOS.undent
+      raise <<-EOS.undent
         Building MPI support for both single and multi-threaded flavors
         is not supported.  Please use "--with-mpi" together with
         "--without-single".
@@ -120,7 +120,7 @@ class Boost155 < Formula
 
     if build.cxx11? && build.with?("mpi") && (build.with?("python") \
                                                || build.with?("python3"))
-      fail <<-EOS.undent
+      raise <<-EOS.undent
         Building MPI support for Python using C++11 mode results in
         failure and hence disabled.  Please don"t use this combination
         of options.

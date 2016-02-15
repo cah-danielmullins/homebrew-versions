@@ -26,19 +26,20 @@ class Gcc5 < Formula
   sha256 "5f835b04b5f7dd4f4d2dc96190ec1621b8d89f2dc6f638f9f8bc1b1014ba8cad"
 
   bottle do
-    sha256 "e70e8ce3ef7b1a9ec3677c34cad3480d985042b88909568c140dddfbdfa8dca2" => :yosemite
-    sha256 "8dfd614540e36459c57c095292f7ad687249ad3530d7f95f690fb4e6629bdbea" => :mavericks
-    sha256 "56a3d0e3a79b365fc366a43616faa5e30da4d8a5cb6bbc58d611f98d22f9c080" => :mountain_lion
+    revision 2
+    sha256 "23cba643a7614992c731f5d057c8eb06452ab7a5a81de9450e5ffe7d7d257967" => :el_capitan
+    sha256 "3bd5c93baff771a93250213c3fb1299db702fe6fe355a0a20f3da2a2de343e5b" => :yosemite
+    sha256 "3e12f9f8623b846cbe6bc872d0a308e021d75de2da2d08ff4d854059661f2a02" => :mavericks
   end
 
   # GCC's Go compiler is not currently supported on Mac OS X.
   # See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=46986
-  option "with-fortran", "Build the gfortran compiler"
   option "with-java", "Build the gcj compiler"
   option "with-all-languages", "Enable all compilers and languages, except Ada"
   option "with-nls", "Build with native language support (localization)"
   option "with-profiled-build", "Make use of profile guided optimization when bootstrapping GCC"
   option "with-jit", "Build the jit compiler"
+  option "without-fortran", "Build without the gfortran compiler"
   # enabling multilib on a host that can"t run 64-bit results in build failures
   option "without-multilib", "Build without multilib support" if MacOS.prefer_64_bit?
 
@@ -65,7 +66,7 @@ class Gcc5 < Formula
   # GCC bootstraps itself, so it is OK to have an incompatible C++ stdlib
   cxxstdlib_check :skip
 
-  # Fix for libgccjit.so linkage on Darwin
+  # Fix for libgccjit.so linkage on Darwin.
   # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64089
   patch :DATA
 
@@ -196,6 +197,7 @@ class Gcc5 < Formula
     assert_equal "Hello, world!\n", `./hello-c`
   end
 end
+
 __END__
 --- a/gcc/jit/Make-lang.in	2015-02-03 17:19:58.000000000 +0000
 +++ b/gcc/jit/Make-lang.in	2015-04-08 22:08:24.000000000 +0100

@@ -1,13 +1,15 @@
 class Go12 < Formula
+  desc "Go programming environment (1.2)"
   homepage "https://golang.org"
   url "https://storage.googleapis.com/golang/go1.2.2.src.tar.gz"
   version "1.2.2"
-  sha1 "3ce0ac4db434fc1546fec074841ff40dc48c1167"
+  sha256 "fbcfe1fe6dfe660cae1c973811c5e2075e3f7b06feea32b4b91c7f0b48352391"
 
   bottle do
-    sha1 "5e138e15af3a7ac39a0b6afdc238566e25c613f9" => :yosemite
-    sha1 "8ca3c757a2f30fedef50edf521f13440d787545d" => :mavericks
-    sha1 "42add01f13c4a2a561a207ac5d73065759f7d253" => :mountain_lion
+    revision 1
+    sha256 "ee3fbd6b03dd30ad1d6c7ceddb0bdb1996a92e330ce55824e297ab2d28e2c620" => :yosemite
+    sha256 "383187b7db521e111d94a92429e871d83c488160597c5ff4713edd97be9a106b" => :mavericks
+    sha256 "8dcc1ade8167d6eef201149818e670959c324b55a51cfce0a58dbbf7b67b4131" => :mountain_lion
   end
 
   option "with-cc-all", "Build with cross-compilers and runtime support for all supported platforms"
@@ -57,6 +59,7 @@ class Go12 < Formula
           ENV["GOOS"]         = os
           ENV["GOARCH"]       = arch
           ENV["CGO_ENABLED"]  = cgo_enabled
+          ohai "Building go for #{arch}-#{os}"
           system "./make.bash", "--no-clean"
         end
       end
@@ -65,10 +68,11 @@ class Go12 < Formula
     (buildpath/"pkg/obj").rmtree
 
     libexec.install Dir["*"]
-    bin.install_symlink Dir["#{libexec}/bin/go*"]
+    (bin/"go12").write_env_script(libexec/"bin/go", :PATH => "#{libexec}/bin:$PATH")
+    bin.install_symlink libexec/"bin/gofmt" => "gofmt12"
 
     if build.with?("godoc") || build.with?("vet")
-      ENV.prepend_path "PATH", bin
+      ENV.prepend_path "PATH", libexec/"bin"
       ENV["GOPATH"] = buildpath
       (buildpath/"src/golang.org/x/tools").install resource("gotools")
 
@@ -77,7 +81,7 @@ class Go12 < Formula
           system "go", "build"
           (libexec/"bin").install "godoc"
         end
-        bin.install_symlink libexec/"bin/godoc"
+        bin.install_symlink libexec/"bin/godoc" => "godoc12"
       end
 
       if build.with? "vet"
@@ -91,10 +95,13 @@ class Go12 < Formula
   end
 
   def caveats; <<-EOS.undent
-    As of go 1.2, a valid GOPATH is required to use the `go get` command:
-      http://golang.org/doc/code.html#GOPATH
+    The `go*` commands in `bin` are suffixed with 12 e.g. `go12`.
 
-    You may wish to add the GOROOT-based install location to your PATH:
+    As of go 1.2, a valid GOPATH is required to use the `go get` command:
+      https://golang.org/doc/code.html#GOPATH
+
+    You may wish to add the GOROOT-based install location
+    (with unsuffixed `go*` commands) to your PATH:
       export PATH=$PATH:#{opt_libexec}/bin
     EOS
   end
@@ -111,7 +118,17 @@ class Go12 < Formula
     EOS
     # Run go fmt check for no errors then run the program.
     # This is a a bare minimum of go working as it uses fmt, build, and run.
-    system bin/"go", "fmt", "hello.go"
-    assert_equal "Hello World\n", `#{bin}/go run hello.go`
+    system "#{bin}/go12", "fmt", "hello.go"
+    assert_equal "Hello World\n", shell_output("#{bin}/go12 run hello.go")
+
+    if build.with? "godoc"
+      assert File.exist?(libexec/"bin/godoc")
+      assert File.executable?(libexec/"bin/godoc")
+    end
+
+    if build.with? "vet"
+      assert File.exist?(libexec/"pkg/tool/darwin_amd64/vet")
+      assert File.executable?(libexec/"pkg/tool/darwin_amd64/vet")
+    end
   end
 end

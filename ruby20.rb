@@ -1,13 +1,16 @@
 class Ruby20 < Formula
+  desc "Powerful, clean, object-oriented scripting language"
   homepage "https://www.ruby-lang.org/"
-  url "http://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p645.tar.bz2"
-  sha256 "2dcdcf9900cb923a16d3662d067bc8c801997ac3e4a774775e387e883b3683e9"
+  url "https://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p648.tar.bz2"
+  sha256 "087ad4dec748cfe665c856dbfbabdee5520268e94bb81a1d8565d76c3cc62166"
 
   bottle do
-    sha256 "e9b01603d66cc5553ca7f9d3594fc0ce6d186aea4c85aaa1af1c241404452e39" => :yosemite
-    sha256 "0e79ce291d4f661d7872f7deb1d809a419a7c6599483a422bc7787049f0cebb0" => :mavericks
-    sha256 "6840f190b6a853a2fa885f24cf60b203424aa2a7eb887ab5f051848f072de30e" => :mountain_lion
+    sha256 "4fe2f216254bf42f9a9e45f8805e5f857013a0f4d42d4210d5e60b897dde2ca0" => :el_capitan
+    sha256 "9f772ae1e90bd221e312f90faefa5f2c31cf239c43559ba6dee9ea4a7c4d86b3" => :yosemite
+    sha256 "2aa6763dbbb5d1fb22c4638a4e4cca8c4c16b029b8e9809aee7d7d044f25eb4c" => :mavericks
   end
+
+  keg_only :provided_by_osx
 
   option :universal
   option "with-suffix", "Suffix commands with '20'"
@@ -27,41 +30,80 @@ class Ruby20 < Formula
   end
 
   def install
-    args = %W[--prefix=#{prefix} --enable-shared]
+    args = %W[
+      --prefix=#{prefix}
+      --enable-shared
+      --with-sitedir=#{HOMEBREW_PREFIX}/lib/ruby/site_ruby
+      --with-vendordir=#{HOMEBREW_PREFIX}/lib/ruby/vendor_ruby
+    ]
 
     if build.universal?
       ENV.universal_binary
       args << "--with-arch=#{Hardware::CPU.universal_archs.join(",")}"
     end
 
-    args << "--program-suffix=20" if build.with? "suffix"
+    args << "--program-suffix=#{program_suffix}" if build.with? "suffix"
     args << "--with-out-ext=tk" if build.without? "tcltk"
     args << "--disable-install-doc" if build.without? "doc"
     args << "--disable-dtrace" unless MacOS::CLT.installed?
 
-    paths = []
+    paths = [
+      Formula["libyaml"].opt_prefix,
+      Formula["openssl"].opt_prefix,
+    ]
 
-    paths.concat %w[readline gdbm libffi].map { |dep|
-      Formula[dep].opt_prefix if build.with? dep
-    }.compact
-
-    paths.concat %w[libyaml openssl].map { |dep|
-      Formula[dep].opt_prefix
-    }
+    %w[readline gdbm libffi].each do |dep|
+      paths << Formula[dep].opt_prefix if build.with? dep
+    end
 
     args << "--with-opt-dir=#{paths.join(":")}"
 
     system "./configure", *args
+
+    # Ruby has been configured to look in the HOMEBREW_PREFIX for the
+    # sitedir and vendordir directories; however we don't actually want to create
+    # them during the install.
+    #
+    # These directories are empty on install; sitedir is used for non-rubygems
+    # third party libraries, and vendordir is used for packager-provided libraries.
+    inreplace "tool/rbinstall.rb" do |s|
+      s.gsub! 'prepare "extension scripts", sitelibdir', ""
+      s.gsub! 'prepare "extension scripts", vendorlibdir', ""
+      s.gsub! 'prepare "extension objects", sitearchlibdir', ""
+      s.gsub! 'prepare "extension objects", vendorarchlibdir', ""
+    end
+
     system "make"
     system "make", "install"
   end
 
   def post_install
-    (lib/"ruby/#{abi_version}/rubygems/defaults/operating_system.rb").write rubygems_config
+    # Customize rubygems to look/install in the global gem directory
+    # instead of in the Cellar, making gems last across reinstalls
+    config_file = lib/"ruby/#{abi_version}/rubygems/defaults/operating_system.rb"
+    config_file.unlink if config_file.exist?
+    config_file.write rubygems_config
+
+    # Create the sitedir and vendordir that were skipped during install
+    ruby="#{bin}/ruby#{program_suffix}"
+    %w[sitearchdir vendorarchdir].each do |dir|
+      mkdir_p `#{ruby} -rrbconfig -e 'print RbConfig::CONFIG["#{dir}"]'`
+    end
+
+    # Create the version-specific bindir used by rubygems
+    mkdir_p "#{rubygems_bindir}"
   end
 
   def abi_version
     "2.0.0"
+  end
+
+  def program_suffix
+    build.with?("suffix") ? "20" : ""
+  end
+
+  def rubygems_bindir
+    "#{HOMEBREW_PREFIX}/lib/ruby/gems/#{abi_version}/bin"
   end
 
   def rubygems_config; <<-EOS.undent
@@ -119,17 +161,27 @@ class Ruby20 < Formula
       end
 
       def self.default_bindir
-        "#{HOMEBREW_PREFIX}/bin"
+        "#{rubygems_bindir}"
       end
 
       def self.ruby
-        "#{opt_bin}/ruby#{"20" if build.with? "suffix"}"
+        "#{opt_bin}/ruby#{program_suffix}"
       end
     end
     EOS
   end
 
+  def caveats; <<-EOS.undent
+    By default, binaries installed by gem will be placed into:
+      #{rubygems_bindir}
+
+    You may want to add this to your PATH.
+    EOS
+  end
+
   test do
-    system bin/"ruby", "--version"
+    hello_text = shell_output("#{bin}/ruby#{program_suffix} -e 'puts :hello'")
+    assert_equal "hello\n", hello_text
+    system "#{bin}/gem#{program_suffix}", "list", "--local"
   end
 end

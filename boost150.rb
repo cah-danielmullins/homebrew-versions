@@ -1,4 +1,5 @@
 class Boost150 < Formula
+  desc "Collection of portable C++ source libraries"
   homepage "http://www.boost.org"
   url "https://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2"
   sha256 "c9ace2b8c81fa6703d1d17c7e478de3bc51101c5adbdeb3f6cb72cf3045a8529"
@@ -35,7 +36,7 @@ class Boost150 < Formula
 
     # https://svn.boost.org/trac/boost/ticket/8841
     if (build.with? "mpi") && (build.with? "single")
-      fail <<-EOS.undent
+      raise <<-EOS.undent
         Building MPI support for both single and multi-threaded flavors
         is not supported.  Please use "--with-mpi" together with
         "--without-single".

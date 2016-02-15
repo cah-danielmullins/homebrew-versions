@@ -2,13 +2,14 @@
 class Node010 < Formula
   desc "Platform built on V8 to build network applications"
   homepage "https://nodejs.org/"
-  url "https://nodejs.org/dist/v0.10.40/node-v0.10.40.tar.gz"
-  sha256 "bae79c2fd959aebe1629af36077bebbb760128db753da226d2344cd91499149f"
+  url "https://nodejs.org/dist/v0.10.42/node-v0.10.42.tar.gz"
+  sha256 "ebc1d53698f80c5a7b0b948e1108d7858f93d2d9ebf4541c12688d85704de105"
+  head "https://github.com/nodejs/node.git", :branch => "v0.10-staging"
 
   bottle do
-    sha256 "e4242ae9393f9a103ddd64cd01d18f3d5b5a9cbb476d29921a2ad9502a7b6397" => :yosemite
-    sha256 "738a4e3db5efcf9165b2f896e2ba589f1098a7f16dea695cddc12a5c8d92f8f4" => :mavericks
-    sha256 "bfa978f1da864b66080244fd2485ad67d58cf4f78cb9d6f4c60781a08733dfaf" => :mountain_lion
+    sha256 "67a181f3fc75f7e4d2513b63dca6025bdb3f3ff578d671552fba6eebdcb04486" => :el_capitan
+    sha256 "8b3611bf3dedfff63ed3d07d35739c1a8579e46cbfe9dc1dd26b25b9bbcf88e4" => :yosemite
+    sha256 "bf81843537f8a78c2525e0309a098077396ff5ae558ff1d28201560795d307f2" => :mavericks
   end
 
   deprecated_option "enable-debug" => "with-debug"
@@ -25,8 +26,8 @@ class Node010 < Formula
   end
 
   resource "npm" do
-    url "https://registry.npmjs.org/npm/-/npm-2.12.1.tgz"
-    sha256 "6b6512c6f9097da193dfe046053d6d0483b5c5658dc0a763c1ba5609b6bbc16c"
+    url "https://registry.npmjs.org/npm/-/npm-2.14.4.tgz"
+    sha256 "c8b602de5d51f956aa8f9c34d89be38b2df3b7c25ff6588030eb8224b070db27"
   end
 
   conflicts_with "node",
@@ -57,9 +58,16 @@ class Node010 < Formula
       # set log level temporarily for npm's `make install`
       ENV["NPM_CONFIG_LOGLEVEL"] = "verbose"
 
+      # unset prefix temporarily for npm's `make install`
+      ENV.delete "NPM_CONFIG_PREFIX"
+
       cd buildpath/"npm_install" do
         system "./configure", "--prefix=#{libexec}/npm"
         system "make", "install"
+        # Remove manpage symlinks from the buildpath, they are breaking bottle
+        # creation. The real manpages are living in libexec/npm/lib/node_modules/npm/man/
+        # https://github.com/Homebrew/homebrew/pull/47081#issuecomment-165280470
+        rm_rf libexec/"npm/share/"
       end
 
       if build.with? "completion"
@@ -118,9 +126,8 @@ class Node010 < Formula
     path = testpath/"test.js"
     path.write "console.log('hello');"
 
-    output = `#{bin}/node #{path}`.strip
+    output = shell_output("#{bin}/node #{path}").strip
     assert_equal "hello", output
-    assert_equal 0, $?.exitstatus
 
     if build.with? "npm"
       # make sure npm can find node

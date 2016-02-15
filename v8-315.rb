@@ -1,25 +1,19 @@
 class V8315 < Formula
   homepage "https://code.google.com/p/v8/"
-  # Use the official github mirror, it is easier to find tags there
-  url "https://github.com/v8/v8/archive/3.15.11.tar.gz"
-  sha1 "0c47b3a5409d71d4fd6581520c8972f7451a87e4"
+  url "https://github.com/v8/v8-git-mirror/archive/3.15.11.18.tar.gz"
+  sha256 "93a4945a550e5718d474113d9769a3c010ba21e3764df8f22932903cd106314d"
 
   bottle do
     cellar :any
-    sha1 "d2304e24d2fa6d6d499327d98755f4a0088d83d4" => :yosemite
-    sha1 "1c3a4a0b45f0d5a706e048e80f5a497a6d2e02ec" => :mavericks
-    sha1 "be82b18f5f267be5e11da92c62efb8a4c89f33c1" => :mountain_lion
+    revision 1
+    sha256 "e3fbc94e5599418c351359a77c335beab824e99ebe8006379e97097694a18607" => :el_capitan
+    sha256 "a540a1bb558076d45666623814645c5b1f03c96dee0b0a21d02c63f68fdee8a1" => :yosemite
+    sha256 "33b48defef5c8e5f39c6bf20b0f85f6488c4e8282a9d5be38746907f035c4723" => :mavericks
   end
 
   keg_only "Conflicts with V8 in Homebrew/homebrew."
 
   def install
-    # Lie to `xcode-select` for now to work around a GYP bug that affects
-    # CLT-only systems:
-    #
-    #   http://code.google.com/p/gyp/issues/detail?id=292
-    ENV["DEVELOPER_DIR"] = MacOS.dev_tools_path unless MacOS::Xcode.installed?
-
     system "make", "dependencies"
     system "make", "native",
                    "-j#{ENV.make_jobs}",

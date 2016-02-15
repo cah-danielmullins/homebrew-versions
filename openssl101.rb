@@ -1,23 +1,26 @@
 class Openssl101 < Formula
-  desc "OpenSSL SSL/TLS cryptography library"
+  desc "SSL/TLS cryptography library"
   homepage "https://openssl.org"
-  url "https://www.openssl.org/source/openssl-1.0.1p.tar.gz"
-  mirror "https://raw.githubusercontent.com/DomT4/LibreMirror/master/OpenSSL/openssl-1.0.1p.tar.gz"
-  sha256 "bd5ee6803165c0fb60bbecbacacf244f1f90d2aa0d71353af610c29121e9b2f1"
+  url "https://www.openssl.org/source/openssl-1.0.1r.tar.gz"
+  mirror "https://dl.bintray.com/homebrew/mirror/openssl-1.0.1r.tar.gz"
+  mirror "https://www.mirrorservice.org/sites/ftp.openssl.org/source/openssl-1.0.1r.tar.gz"
+  sha256 "784bd8d355ed01ce98b812f873f8b2313da61df7c7b5677fcf2e57b0863a3346"
 
   bottle do
-    sha256 "0713e1db2896db21b0893c12dc156e89d6c25bcec781538d28793d74c94caee8" => :yosemite
-    sha256 "6ea2af202387d576e9c9993290ae3ef93bc2fe04020ee0b45836572a5c7c9ca0" => :mavericks
-    sha256 "4439ad983ecc79547d8cd2289042e3aa7c2ba5d728e44f43632364042452ffe7" => :mountain_lion
+    sha256 "2fab0f1c965c4d7e2b5256549a3fe08d6509b40a3fbe8e38187d95e47a346e33" => :el_capitan
+    sha256 "a1b7f379ecceb15de205c4d96ad0dec3b1bf2ae3f5275a137c14afbc10d77fd1" => :yosemite
+    sha256 "3092ce09d3d012708841d861d9d8f179b83f1199fd99ffcf9f2f64385fd4fa95" => :mavericks
   end
-
-  option :universal
-  option "without-check", "Skip build-time tests (not recommended)"
-
-  depends_on "makedepend" => :build
 
   keg_only :provided_by_osx,
     "Apple has deprecated use of OpenSSL in favor of its own TLS and crypto libraries"
+
+  option :universal
+  option "without-test", "Skip build-time tests (not recommended)"
+
+  deprecated_option "without-check" => "without-test"
+
+  depends_on "makedepend" => :build
 
   def arch_args
     {
@@ -63,7 +66,7 @@ class Openssl101 < Formula
       system "make", "depend"
       system "make"
 
-      if (MacOS.prefer_64_bit? || arch == MacOS.preferred_arch) && build.with?("check")
+      if (MacOS.prefer_64_bit? || arch == MacOS.preferred_arch) && build.with?("test")
         system "make", "test"
       end
 
@@ -137,10 +140,9 @@ class Openssl101 < Formula
   end
 
   test do
-    # Check OpenSSL itself functions as expected.
     (testpath/"testfile.txt").write("This is a test file")
-    expected_checksum = "91b7b0b1e27bfbf7bc646946f35fa972c47c2d32"
-    system "#{bin}/openssl", "dgst", "-sha1", "-out", "checksum.txt", "testfile.txt"
+    expected_checksum = "e2d0fe1585a63ec6009c8016ff8dda8b17719a637405a4e23c0ff81339148249"
+    system "#{bin}/openssl", "dgst", "-sha256", "-out", "checksum.txt", "testfile.txt"
     open("checksum.txt") do |f|
       checksum = f.read(100).split("=").last.strip
       assert_equal checksum, expected_checksum

@@ -11,6 +11,7 @@ class UniversalPython < Requirement
 end
 
 class Boost149 < Formula
+  desc "Collection of portable C++ source libraries"
   homepage "http://www.boost.org"
   url "https://downloads.sourceforge.net/project/boost/boost/1.49.0/boost_1_49_0.tar.bz2"
   sha256 "dd748a7f5507a7e7af74f452e1c52a64e651ed1f7263fce438a06641d2180d3c"
@@ -31,7 +32,7 @@ class Boost149 < Formula
   deprecated_option "with-icu" => "with-icu4c"
 
   depends_on :python => :recommended
-  depends_on UniversalPython if build.universal? and build.with? "python"
+  depends_on UniversalPython if build.universal? && build.with?("python")
   depends_on "icu4c" => :optional
   depends_on :mpi => [:cc, :cxx, :optional]
 

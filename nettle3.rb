@@ -1,19 +1,21 @@
 class Nettle3 < Formula
+  desc "Low-level cryptographic library"
   homepage "https://www.lysator.liu.se/~nisse/nettle/"
-  url "http://ftpmirror.gnu.org/nettle/nettle-3.1.tar.gz"
-  mirror "https://ftp.gnu.org/gnu/nettle/nettle-3.1.tar.gz"
-  sha256 "f6859d4ec88e70805590af9862b4b8c43a2d1fc7991df0a7a711b1e7ca9fc9d3"
+  url "http://ftpmirror.gnu.org/nettle/nettle-3.1.1.tar.gz"
+  mirror "https://ftp.gnu.org/gnu/nettle/nettle-3.1.1.tar.gz"
+  sha256 "5fd4d25d64d8ddcb85d0d897572af73b05b4d163c6cc49438a5bfbb8ff293d4c"
 
   bottle do
     cellar :any
-    sha256 "e50d9eab1bbc727db7176ce14e64583e10305edf29f58478f44e81e67129f6fb" => :yosemite
-    sha256 "793f30f7cb3773776ad460a6cb65c63828d2030ebc6b09596f93c6925c22e95a" => :mavericks
-    sha256 "24923b41a6bd4a1c126dbc5ff2d202e7a49ff79d360654691b40503be06e5886" => :mountain_lion
+    revision 1
+    sha256 "79a067bb298e58733ac4dae8f28cdc5b09af94b068e75f7051f2fce54bfa302b" => :el_capitan
+    sha256 "0c42176d5cef0ddfce8fcaa15cf733d87e85874895902ecfc68afeedd723b62c" => :yosemite
+    sha256 "57d8353f6245063cf2d232be5e9bf33a230751f073d232af97a0473b54d67a32" => :mavericks
   end
 
   depends_on "gmp"
 
-  keg_only "Conflicts with nettle in main repository and is not API compatible."
+  keg_only "Conflicts with nettle in main repository"
 
   def install
     system "./configure", "--disable-dependency-tracking",
